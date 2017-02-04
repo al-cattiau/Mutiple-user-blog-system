@@ -1,0 +1,43 @@
+{% extends "b-base.html" %}
+{% block title %}
+experience others Life
+{% endblock %}
+
+{% block content %}
+<nav class="nav nav-inline">
+{% if disabled %}
+  <a class="nav-link active" href="/login">Login</a>
+  <a class="nav-link" href="/register">Register</a>
+  <a class="nav-link disabled" href="#">Post new story</a>
+  {% else %}
+  <a class="nav-link" href="/logout">Logout</a>
+  <a class="nav-link" href="#">{{ user_name }}(Personal Center)</a>
+  <a class="nav-link" href="/submit">Post new story</a>
+  {% endif %}
+</nav>
+<div class="container">
+    <div class="jumbotron" style="background: white">
+        <h1 class="display-3">Life that share by others</h1>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" href="/" role="button">Share your story!</a>
+        </p>
+    </div>
+    {% for article in articles %}
+    <div class="card card-block" style="margin: 20px">
+        <h2 class="card-title">
+            {{ article.title }}
+        </h2>
+        {{ article.post_time }}
+        <br>
+        author: {{ article.author }}
+        <div class="card-text"> 
+            <p>
+                {{ article.body }}
+            </p>
+            <a href="#"><button class="btn btn-link">more</button></a>
+        </div>
+    </div>
+    
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "b-base.html" %}
+{% block title %}
+First step to be a story teller
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ method }}</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label for="">your name</label>
+            <input type="text" name="name" class="form-control" placeholder="write your name in here">
+            
+        </div>
+        <div class="form-group">
+            <label for="">your password</label>
+            <input type="password" name="password" class="form-control" placeholder="write your password in here">
+        </div>
+        <button class="btn btn-primary">submit</button>
+    </form>
+    {% if error %}
+    <h3>{{error}}</h3>
+    {% endif %}
+</div>
+{% endblock %}
