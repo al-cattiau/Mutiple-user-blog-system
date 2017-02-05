@@ -38,6 +38,7 @@ experience others Life
             </p>
             {% if not disabled and article.author == user_name %}
             <a href="/article/{{article.title}}"><button class="btn btn-link">Delete</button></a>
+            <a href="/edit/{{article.title}}"><button class="btn btn-link">Edit</button></a>
             {% endif %}
             {% if not disabled and not article.author == user_name %}
             <a href="/vote/{{article.title}}"><i class="fa fa-thumbs-up"></i></a>

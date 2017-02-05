@@ -79,6 +79,35 @@ class SubmitHandler(MainHandler):
         else:
             self.get()
 
+class EditHandler(MainHandler):
+    def get(self,article):
+        
+        db_article = db.GqlQuery("SELECT * FROM Article WHERE title =:title",title=article)[0]
+        self.render('rewrite.html',article=db_article)
+
+
+    def post(self,article):
+        author = self.request.cookies.get('name')
+        if not author:
+            self.redirect('/login')            
+        title = self.request.get('title')
+        body = self.request.get('body')
+        body = body.replace('\n','<br>')
+        db_article = db.GqlQuery("SELECT * FROM Article WHERE title =:title",title=article)[0]
+        if body and title:
+            
+            db_article.title = title
+            db_article.body = body
+            
+            db_article.put()
+
+            time.sleep(0.1)
+            self.redirect('/view')
+        else:
+            self.get()
+
+
+
 
 class ViewHandler(MainHandler):
     def get(self):
@@ -130,8 +159,9 @@ class SignupHandler(MainHandler):
     def post(self):
         password = self.request.get('password')
         name = self.request.get('name')
+        confirm = self.request.get('confirm')
 
-        if password and name:
+        if password and name and password == confirm:
             user = User(password=password,name=name)
             user.put()
             self.response.headers.add_header(
@@ -139,6 +169,8 @@ class SignupHandler(MainHandler):
                 '%s=%s;Path=/' %('name',str(name))
             )
             self.redirect('/')
+        else:
+            self.render("signup.html")
 
 class LoginHandler(MainHandler):
     def get(self):
@@ -176,11 +208,12 @@ app = webapp2.WSGIApplication([
     ('/submit', SubmitHandler),
     ('/view',ViewHandler),
     ('/',ViewHandler),
-    ('/delete',DeleteHandler),
+    ('/deleteall',DeleteHandler),
     ('/signup',SignupHandler),
     ('/logout',LogoutHandler),
     ('/login',LoginHandler),
-    ('/article/(.*)',SingleDeleteHandler),
+    ('/delete/(.*)',SingleDeleteHandler),
+    ('/edit/(.*)',EditHandler),
     ('/vote/(.*)',VoteHandler)
 
 ], debug=True)
