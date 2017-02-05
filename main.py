@@ -31,7 +31,9 @@ class Article(db.Model):
     title = db.StringProperty(required=True)
     author = db.StringProperty(required=True)
     body = db.TextProperty(required=True)
+    votes = db.IntegerProperty(required=True)
     post_time = db.DateTimeProperty(auto_now_add = True)
+    
     
 
 
@@ -67,8 +69,9 @@ class SubmitHandler(MainHandler):
         body = self.request.get('body')
         body = body.replace('\n','<br>')
         if body and title:
-
-            article = Article(body=body,title=title,author=author)
+            
+            article = Article(votes=0,body=body,title=title,author=author)
+            
             article.put()
 
             time.sleep(0.1)
@@ -97,6 +100,28 @@ class DeleteHandler(MainHandler):
         for article in articles:
             article.delete()
         
+class SingleDeleteHandler(MainHandler):
+    def get(self,article):
+        db_article = db.GqlQuery("SELECT * FROM Article WHERE title=:name",name=article)
+        if db_article:
+            for article in db_article:
+                article.delete()
+        time.sleep(0.1)
+        self.redirect('/')
+        
+class VoteHandler(MainHandler):
+    def get(self,article):
+        db_article = db.GqlQuery("SELECT * FROM Article WHERE title=:name",name=article)
+        if db_article:
+            for article in db_article:
+                article.vote += 1
+                article.put()
+        time.sleep(0.1)
+        self.redirect('/')
+
+
+
+
 
 class SignupHandler(MainHandler):
     def get(self):
@@ -154,5 +179,8 @@ app = webapp2.WSGIApplication([
     ('/delete',DeleteHandler),
     ('/signup',SignupHandler),
     ('/logout',LogoutHandler),
-    ('/login',LoginHandler)
+    ('/login',LoginHandler),
+    ('/article/(.*)',SingleDeleteHandler),
+    ('/vote/(.*)',VoteHandler)
+
 ], debug=True)
