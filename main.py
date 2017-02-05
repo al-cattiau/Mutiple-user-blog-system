@@ -114,7 +114,7 @@ class VoteHandler(MainHandler):
         db_article = db.GqlQuery("SELECT * FROM Article WHERE title=:name",name=article)
         if db_article:
             for article in db_article:
-                article.vote += 1
+                article.votes += 1
                 article.put()
         time.sleep(0.1)
         self.redirect('/')
