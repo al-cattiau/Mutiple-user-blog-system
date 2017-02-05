@@ -98,9 +98,9 @@ class DeleteHandler(MainHandler):
             article.delete()
         
 
-class RegisterHandler(MainHandler):
+class SignupHandler(MainHandler):
     def get(self):
-        self.render("sign.html",method='Resgiter')
+        self.render("signup.html")
 
     def post(self):
         password = self.request.get('password')
@@ -117,7 +117,7 @@ class RegisterHandler(MainHandler):
 
 class LoginHandler(MainHandler):
     def get(self):
-        self.render("sign.html",method='Login')
+        self.render("login.html")
 
     def post(self):
         password = self.request.get('password')
@@ -129,10 +129,10 @@ class LoginHandler(MainHandler):
         print str(password),str(p_password)
         if not p_password:
             params['error'] = "no this user"
-            self.render("/sign.html",**params)
+            self.render("/login.html",**params)
         elif not p_password == password:
             params['error'] = "password error"
-            self.render("/sign.html",**params)
+            self.render("/login.html",**params)
         else:
             self.response.headers.add_header(
                 'Set-Cookie',
@@ -152,7 +152,7 @@ app = webapp2.WSGIApplication([
     ('/view',ViewHandler),
     ('/',ViewHandler),
     ('/delete',DeleteHandler),
-    ('/register',RegisterHandler),
+    ('/signup',SignupHandler),
     ('/logout',LogoutHandler),
     ('/login',LoginHandler)
 ], debug=True)
