@@ -31,11 +31,9 @@ class Article(db.Model):
     title = db.StringProperty(required=True)
     author = db.StringProperty(required=True)
     body = db.TextProperty(required=True)
-    votes = db.IntegerProperty(required=True)
+    votes = db.StringListProperty(required=True)
     post_time = db.DateTimeProperty(auto_now_add = True)
     
-    
-
 
 class User(db.Model):
     name = db.StringProperty(required=True)
@@ -43,9 +41,7 @@ class User(db.Model):
 
 
 # request handler class
-class MainHandler(webapp2.RequestHandler):
-    
-        
+class MainHandler(webapp2.RequestHandler):    
     def write(self,*a,**kw):
         self.response.out.write(*a,**kw)
 
@@ -56,13 +52,32 @@ class MainHandler(webapp2.RequestHandler):
     def render(self,template,**kw):
         self.write(self.render_str(template,**kw))
 
+    def checkKey(self):
+        key = self.request.cookies.get('key')
+        return key
+
+    def checkUser(self):
+        key = self.checkKey()
+        if key:
+            user = db.get(key)
+            if user:
+                return user
+
+    def getAllUsers(self):
+        users = db.GqlQuery("SELECT * FROM User")
+        return users
+
+    def getAllArticles(self):
+        articles = db.GqlQuery("SELECT * FROM Article")
+        return articles
+
 
 class SubmitHandler(MainHandler):
     def get(self):
         self.render('write.html')
 
     def post(self):
-        author = self.request.cookies.get('name')
+        author = self.checkCookie();
         if not author:
             self.redirect('/login')            
         title = self.request.get('title')
@@ -70,9 +85,9 @@ class SubmitHandler(MainHandler):
         body = body.replace('\n','<br>')
         if body and title:
             
-            article = Article(votes=0,body=body,title=title,author=author)
+            article = Article(votes=[],body=body,title=title,author=author)
             
-            article.put()
+            key = article.put()
 
             time.sleep(0.1)
             self.redirect('/view')
@@ -87,7 +102,7 @@ class EditHandler(MainHandler):
 
 
     def post(self,article):
-        author = self.request.cookies.get('name')
+        author = self.checkCookie();
         if not author:
             self.redirect('/login')            
         title = self.request.get('title')
@@ -95,12 +110,9 @@ class EditHandler(MainHandler):
         body = body.replace('\n','<br>')
         db_article = db.GqlQuery("SELECT * FROM Article WHERE title =:title",title=article)[0]
         if body and title:
-            
             db_article.title = title
             db_article.body = body
-            
             db_article.put()
-
             time.sleep(0.1)
             self.redirect('/view')
         else:
@@ -108,14 +120,13 @@ class EditHandler(MainHandler):
 
 
 
-
 class ViewHandler(MainHandler):
     def get(self):
-        articles = db.GqlQuery("SELECT * FROM Article")
-        #print articles[0].title
-        cookie = self.request.cookies.get('name')
-        if cookie:
-            self.render('view.html',articles=articles,user_name=cookie)
+        user = self.checkUser()
+        
+        articles = self.getAllArticles()
+        if user:
+            self.render('view.html',articles=articles,user_name=user.name)
         else:
             self.render('view.html',articles=articles,disabled="True")
 
@@ -130,22 +141,25 @@ class DeleteHandler(MainHandler):
             article.delete()
         
 class SingleDeleteHandler(MainHandler):
-    def get(self,article):
-        db_article = db.GqlQuery("SELECT * FROM Article WHERE title=:name",name=article)
-        if db_article:
-            for article in db_article:
-                article.delete()
-        time.sleep(0.1)
+    def get(self,article_key):
+        user_key = self.checkCookie()
+        user = db.get(user_key)
+        article = db.get(article_key)
+        if article.author == user.name :
+            db.delete(article_key)
+
         self.redirect('/')
+    
         
 class VoteHandler(MainHandler):
-    def get(self,article):
-        db_article = db.GqlQuery("SELECT * FROM Article WHERE title=:name",name=article)
-        if db_article:
-            for article in db_article:
-                article.votes += 1
-                article.put()
-        time.sleep(0.1)
+    def get(self,article_key):
+        user_key = self.checkCookie()
+        user = db.get(user_key)
+        article = db.get(article_key)
+        if user and article:
+            article.vote.append(user.name)
+            
+        
         self.redirect('/')
 
 
@@ -163,10 +177,10 @@ class SignupHandler(MainHandler):
 
         if password and name and password == confirm:
             user = User(password=password,name=name)
-            user.put()
+            user_key = user.put()
             self.response.headers.add_header(
                 'Set-Cookie',
-                '%s=%s;Path=/' %('name',str(name))
+                '%s=%s;Path=/' %('key',user_key)
             )
             self.redirect('/')
         else:
@@ -179,21 +193,17 @@ class LoginHandler(MainHandler):
     def post(self):
         password = self.request.get('password')
         name = self.request.get('name')
-
-        p_password = db.GqlQuery("SELECT * FROM User WHERE name = :name",name=name).get().password        
+        Entity = 'User'
+        user_key = db.Key.from_path(name,password)
         params = dict()
 
-        print str(password),str(p_password)
-        if not p_password:
-            params['error'] = "no this user"
-            self.render("/login.html",**params)
-        elif not p_password == password:
-            params['error'] = "password error"
-            self.render("/login.html",**params)
+        if not user_key:
+            params['error'] = "no this user or password error"
+            self.render("/login.html",**params)            
         else:
             self.response.headers.add_header(
                 'Set-Cookie',
-                '%s=%s;Path=/' %('name',str(name))
+                '%s=%s;Path=/' %('key',user_key)
             )
             self.redirect('/')
             
@@ -201,7 +211,7 @@ class LoginHandler(MainHandler):
 
 class LogoutHandler(MainHandler):
     def get(self):
-        self.response.delete_cookie('name')
+        self.response.delete_cookie('key')
         self.redirect('/')
 
 app = webapp2.WSGIApplication([

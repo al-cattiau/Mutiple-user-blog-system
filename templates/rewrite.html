@@ -9,7 +9,7 @@ write your code in here.
             <h2>Write your story in here, share in the world.</h2>
             <form method="post">
                 <div class="form-group">
-                    <h4>{{ article.votes }}</h4>
+                    <h4>Votes: {{ article.votes }}</h4>
                     <input type="text" class="form-control" name="title" required value="{{ article.title }}">
                 </div>
                 <div class="form-group">
@@ -23,7 +23,7 @@ write your code in here.
     </div>
     <div class="row">
         <div class="col-md-8">
-            <button class="btn btn-link"><a href="/view">Read the story</a></button>
+            <button class="btn btn-link"><a href="/view">Cancel</a></button>
         </div>
     </div>
 </div>
