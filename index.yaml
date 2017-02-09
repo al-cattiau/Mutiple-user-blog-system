@@ -14,10 +14,10 @@ indexes:
   properties:
   - name: name
   - name: password
-  - name: key
+  - name: Key
 
 - kind: User
   properties:
   - name: name
   - name: password
-  - name: Key
+  - name: key

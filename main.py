@@ -71,13 +71,21 @@ class MainHandler(webapp2.RequestHandler):
         articles = db.GqlQuery("SELECT * FROM Article")
         return articles
 
+    def getUserKey(self,name,password):
+        user_query = User.gql("WHERE name=:name and password=:password",name=name,password=password).get()
+        if user_query:
+            user_key = user_query.key()
+            return user_key
+
+
 
 class SubmitHandler(MainHandler):
     def get(self):
         self.render('write.html')
 
     def post(self):
-        author = self.checkCookie();
+        user = self.checkUser();
+        author = user.name;
         if not author:
             self.redirect('/login')            
         title = self.request.get('title')
@@ -95,24 +103,24 @@ class SubmitHandler(MainHandler):
             self.get()
 
 class EditHandler(MainHandler):
-    def get(self,article):
-        
-        db_article = db.GqlQuery("SELECT * FROM Article WHERE title =:title",title=article)[0]
-        self.render('rewrite.html',article=db_article)
+    def get(self,article_key):
+        article = db.get(article_key)
+        article.body = article.body.replace('<br>','\n')
+        self.render('rewrite.html',article=article)
 
 
-    def post(self,article):
-        author = self.checkCookie();
+    def post(self,article_key):
+        author = self.checkUser();
         if not author:
             self.redirect('/login')            
         title = self.request.get('title')
         body = self.request.get('body')
         body = body.replace('\n','<br>')
-        db_article = db.GqlQuery("SELECT * FROM Article WHERE title =:title",title=article)[0]
+        article = db.get(article_key)
         if body and title:
-            db_article.title = title
-            db_article.body = body
-            db_article.put()
+            article.title = title
+            article.body = body
+            article.put()
             time.sleep(0.1)
             self.redirect('/view')
         else:
@@ -142,24 +150,22 @@ class DeleteHandler(MainHandler):
         
 class SingleDeleteHandler(MainHandler):
     def get(self,article_key):
-        user_key = self.checkCookie()
-        user = db.get(user_key)
+        user = self.checkUser()
         article = db.get(article_key)
         if article.author == user.name :
             db.delete(article_key)
 
+        time.sleep(0.1)
         self.redirect('/')
     
         
 class VoteHandler(MainHandler):
     def get(self,article_key):
-        user_key = self.checkCookie()
-        user = db.get(user_key)
+        user = self.checkUser()
         article = db.get(article_key)
         if user and article:
-            article.vote.append(user.name)
+            article.votes.append(user.name)
             
-        
         self.redirect('/')
 
 
@@ -193,17 +199,16 @@ class LoginHandler(MainHandler):
     def post(self):
         password = self.request.get('password')
         name = self.request.get('name')
-        Entity = 'User'
-        user_key = db.Key.from_path(name,password)
+        key = self.getUserKey(name,password)
         params = dict()
 
-        if not user_key:
+        if not key:
             params['error'] = "no this user or password error"
             self.render("/login.html",**params)            
         else:
             self.response.headers.add_header(
                 'Set-Cookie',
-                '%s=%s;Path=/' %('key',user_key)
+                '%s=%s;Path=/' %('key',key)
             )
             self.redirect('/')
             
