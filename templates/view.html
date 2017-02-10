@@ -41,10 +41,47 @@ experience others Life
             <a href="/edit/{{article.key()}}"><button class="btn btn-link">Edit</button></a>
             {% endif %}
             {% if not disabled and not article.author == user_name %}
-            <a href="/vote/{{article.key()}}"><i class="fa fa-thumbs-up"></i></a>
+            <a href="/vote/{{article.key()}}"><i class="fa fa-thumbs-up"></i>  Like</a>
+            <br>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#modelId">
+              Comment
+            </button>
+            
+            <!-- Modal -->
+            <div class="modal fade" id="modelId" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="modelTitleId">Write your comments here</h4>
+                        </div>
+                        <form method="POST" action="/comments/{{article.key()}}/">
+                        <div class="modal-body">                              
+                              <textarea class="form-control" name="comment"  rows="3"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <input class="btn btn-primary" type="submit">
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>  
+            {% endif %}
+            {% if article.comments %}
+            <p>Comment:</p>
+            {% for comment in article.comments %}
+            {{ comment }}
+            <br>
+            {% endfor %}
             {% endif %}
         </div>
     </div>
+    
+    
     
     {% endfor %}
 </div>

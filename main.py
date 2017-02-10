@@ -15,43 +15,46 @@
 # limitations under the License.
 #
 import webapp2
-import time
 import os
 import jinja2
 from google.appengine.ext import db
 import hashlib
 
 
-template_dir = os.path.join(os.path.dirname(__file__),'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
+template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
 secret = 'lyz'
 
-# deta model 
 class Article(db.Model):
+    """ Data Model for blog Article, has 6 properties."""
     title = db.StringProperty(required=True)
     author = db.StringProperty(required=True)
     body = db.TextProperty(required=True)
     votes = db.StringListProperty(required=True)
-    post_time = db.DateTimeProperty(auto_now_add = True)
-    
+    comments = db.StringListProperty(required=True)
+    post_time = db.DateTimeProperty(auto_now_add=True)
 
 class User(db.Model):
+    """ Data Model for blog User, has 2 properties
+    """
     name = db.StringProperty(required=True)
     password = db.StringProperty(required=True)
 
 
 # request handler class
-class MainHandler(webapp2.RequestHandler):    
-    def write(self,*a,**kw):
-        self.response.out.write(*a,**kw)
+class MainHandler(webapp2.RequestHandler):
+    """ MainHandler for web system, define some basic method."""
+    def write(self, *a, **kw):
+        self.response.out.write(*a, **kw)
 
-    def render_str(self,template,**params):
+    def render_str(self, template, **params):
         t = jinja_env.get_template(template)
         return t.render(params)
 
-    def render(self,template,**kw):
-        self.write(self.render_str(template,**kw))
+    def render(self, template, **kw):
+        self.write(self.render_str(template, **kw))
 
+    # Check the cookie
     def checkKey(self):
         key = self.request.cookies.get('key')
         return key
@@ -71,8 +74,9 @@ class MainHandler(webapp2.RequestHandler):
         articles = db.GqlQuery("SELECT * FROM Article")
         return articles
 
-    def getUserKey(self,name,password):
-        user_query = User.gql("WHERE name=:name and password=:password",name=name,password=password).get()
+    def getUserKey(self, name, password):
+        query = User.gql("WHERE name=:name and password=:password", name=name, password=password)
+        user_query = query.get()
         if user_query:
             user_key = user_query.key()
             return user_key
@@ -84,79 +88,61 @@ class SubmitHandler(MainHandler):
         self.render('write.html')
 
     def post(self):
-        user = self.checkUser();
-        author = user.name;
+        user = self.checkUser()
+        author = user.name
         if not author:
-            self.redirect('/login')            
+            return self.redirect('/login')
         title = self.request.get('title')
         body = self.request.get('body')
-        body = body.replace('\n','<br>')
+        body = body.replace('\n', '<br>')
         if body and title:
-            
-            article = Article(votes=[],body=body,title=title,author=author)
-            
+            article = Article(votes=[], body=body, title=title, author=author, comments=[])
             key = article.put()
-
-            time.sleep(0.1)
-            self.redirect('/view')
+            return self.redirect('/view')
         else:
-            self.get()
+            return self.get()
 
 class EditHandler(MainHandler):
-    def get(self,article_key):
+    def get(self, article_key):
         article = db.get(article_key)
-        article.body = article.body.replace('<br>','\n')
-        self.render('rewrite.html',article=article)
+        article.body = article.body.replace('<br>', '\n')
+        self.render('rewrite.html', article=article)
 
 
-    def post(self,article_key):
-        author = self.checkUser();
-        if not author:
-            self.redirect('/login')            
+    def post(self, article_key):
+        user = self.checkUser()
+        if not user:
+            return self.redirect('/login')
         title = self.request.get('title')
         body = self.request.get('body')
-        body = body.replace('\n','<br>')
+        body = body.replace('\n', '<br>')
         article = db.get(article_key)
-        if body and title:
+        if body and title and article.author == user.name:
             article.title = title
             article.body = body
             article.put()
-            time.sleep(0.1)
-            self.redirect('/view')
+            return self.redirect('/view')
         else:
-            self.get()
+            return self.get(article_key)
 
 
 
 class ViewHandler(MainHandler):
     def get(self):
         user = self.checkUser()
-        
         articles = self.getAllArticles()
         if user:
-            self.render('view.html',articles=articles,user_name=user.name)
+            self.render('view.html', articles=articles, user_name=user.name)
         else:
-            self.render('view.html',articles=articles,disabled="True")
+            self.render('view.html', articles=articles, disabled="True")
 
-
-class DeleteHandler(MainHandler):
-    def get(self):
-        articles = db.GqlQuery("SELECT * FROM Article")
-        users = db.GqlQuery("SELECT * FROM User")
-        for user in users:
-            user.delete()
-        for article in articles:
-            article.delete()
-        
 class SingleDeleteHandler(MainHandler):
-    def get(self,article_key):
+    def get(self, article_key):
         user = self.checkUser()
         article = db.get(article_key)
-        if article.author == user.name :
+        if article.author == user.name:
             db.delete(article_key)
-
-        time.sleep(0.1)
-        self.redirect('/')
+        return self.redirect('/')
     
         
 class VoteHandler(MainHandler):
@@ -165,9 +151,18 @@ class VoteHandler(MainHandler):
         article = db.get(article_key)
         if user and article:
             article.votes.append(user.name)
-            
-        self.redirect('/')
+            article.put()
+        return self.redirect('/')
 
+class CommentHandler(MainHandler):
+    def post(self, article_key):
+        article = db.get(article_key)
+        user = self.checkUser()
+        comment = self.request.get('comment')
+        if user and article:
+            article.comments.append(comment)
+            article.put()
+        return self.redirect('/')
 
 
 
@@ -182,15 +177,15 @@ class SignupHandler(MainHandler):
         confirm = self.request.get('confirm')
 
         if password and name and password == confirm:
-            user = User(password=password,name=name)
+            user = User(password=password, name=name)
             user_key = user.put()
             self.response.headers.add_header(
                 'Set-Cookie',
-                '%s=%s;Path=/' %('key',user_key)
+                '%s=%s;Path=/' %('key', user_key)
             )
-            self.redirect('/')
+            return self.redirect('/')
         else:
-            self.render("signup.html")
+            return self.render("signup.html")
 
 class LoginHandler(MainHandler):
     def get(self):
@@ -199,36 +194,34 @@ class LoginHandler(MainHandler):
     def post(self):
         password = self.request.get('password')
         name = self.request.get('name')
-        key = self.getUserKey(name,password)
+        key = self.getUserKey(name, password)
         params = dict()
 
         if not key:
             params['error'] = "no this user or password error"
-            self.render("/login.html",**params)            
+            self.render("/login.html", **params)
         else:
             self.response.headers.add_header(
                 'Set-Cookie',
-                '%s=%s;Path=/' %('key',key)
+                '%s=%s;Path=/' %('key', key)
             )
-            self.redirect('/')
-            
+            return self.redirect('/')
 
 
 class LogoutHandler(MainHandler):
     def get(self):
         self.response.delete_cookie('key')
-        self.redirect('/')
+        return self.redirect('/')
 
 app = webapp2.WSGIApplication([
     ('/submit', SubmitHandler),
-    ('/view',ViewHandler),
-    ('/',ViewHandler),
-    ('/deleteall',DeleteHandler),
-    ('/signup',SignupHandler),
-    ('/logout',LogoutHandler),
-    ('/login',LoginHandler),
-    ('/delete/(.*)',SingleDeleteHandler),
-    ('/edit/(.*)',EditHandler),
-    ('/vote/(.*)',VoteHandler)
-
+    ('/view', ViewHandler),
+    ('/', ViewHandler),
+    ('/signup', SignupHandler),
+    ('/logout', LogoutHandler),
+    ('/login', LoginHandler),
+    ('/delete/(.*)', SingleDeleteHandler),
+    ('/edit/(.*)', EditHandler),
+    ('/vote/(.*)', VoteHandler),
+    ('/comments/(.*)/', CommentHandler)
 ], debug=True)
