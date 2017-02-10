@@ -66,6 +66,14 @@ class MainHandler(webapp2.RequestHandler):
             if user:
                 return user
 
+    def checkUserOrLog(self):
+        user = self.checkUser()
+        if not user:
+            self.redirect('/login')
+        else:
+            return user
+
+
     def getAllUsers(self):
         users = db.GqlQuery("SELECT * FROM User")
         return users
@@ -88,7 +96,7 @@ class SubmitHandler(MainHandler):
         self.render('write.html')
 
     def post(self):
-        user = self.checkUser()
+        user = self.checkUserOrLog()
         author = user.name
         if not author:
             return self.redirect('/login')
@@ -110,7 +118,7 @@ class EditHandler(MainHandler):
 
 
     def post(self, article_key):
-        user = self.checkUser()
+        user = self.checkUserOrLog()
         if not user:
             return self.redirect('/login')
         title = self.request.get('title')
@@ -134,22 +142,22 @@ class ViewHandler(MainHandler):
         if user:
             self.render('view.html', articles=articles, user_name=user.name)
         else:
-            self.render('view.html', articles=articles, disabled="True")
+            self.render('view.html', articles=articles)
 
 class SingleDeleteHandler(MainHandler):
     def get(self, article_key):
-        user = self.checkUser()
+        user = self.checkUserOrLog()
         article = db.get(article_key)
         if article.author == user.name:
             db.delete(article_key)
         return self.redirect('/')
-    
-        
+
+
 class VoteHandler(MainHandler):
     def get(self,article_key):
-        user = self.checkUser()
+        user = self.checkUserOrLog()
         article = db.get(article_key)
-        if user and article:
+        if user and article and not user.name in article.votes:
             article.votes.append(user.name)
             article.put()
         return self.redirect('/')
@@ -157,7 +165,7 @@ class VoteHandler(MainHandler):
 class CommentHandler(MainHandler):
     def post(self, article_key):
         article = db.get(article_key)
-        user = self.checkUser()
+        user = self.checkUserOrLog()
         comment = self.request.get('comment')
         if user and article:
             article.comments.append(comment)

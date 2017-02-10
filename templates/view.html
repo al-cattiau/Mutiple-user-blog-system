@@ -5,22 +5,19 @@ experience others Life
 
 {% block content %}
 <nav class="nav nav-inline">
-{% if disabled %}
-  <a class="nav-link active" href="/login">Login</a>
-  <a class="nav-link" href="/signup">Sing up</a>
-  <a class="nav-link disabled" href="#">Post new story</a>
-  {% else %}
+{% if user_name %}
   <a class="nav-link" href="/logout">Logout</a>
   <a class="nav-link" href="#">{{ user_name }}(Personal Center)</a>
   <a class="nav-link" href="/submit">Post new story</a>
+  {% else %}
+  <a class="nav-link active" href="/login">Login</a>
+  <a class="nav-link" href="/signup">Sing up</a>
+  <a class="nav-link disabled" href="/login">Post new story</a>
   {% endif %}
 </nav>
 <div class="container">
     <div class="jumbotron" style="background: white">
         <h1 class="display-3">Life that share by others</h1>
-        <p class="lead">
-            <a class="btn btn-primary btn-lg" href="/" role="button">Share your story!</a>
-        </p>
     </div>
     {% for article in articles %}
     <div class="card card-block" style="margin: 20px">
@@ -36,11 +33,11 @@ experience others Life
             <p>
                 {{ article.body }}
             </p>
-            {% if not disabled and article.author == user_name %}
+            {% if article.author == user_name %}
             <a href="/delete/{{article.key()}}"><button class="btn btn-link">Delete</button></a>
             <a href="/edit/{{article.key()}}"><button class="btn btn-link">Edit</button></a>
             {% endif %}
-            {% if not disabled and not article.author == user_name %}
+            {% if not article.author == user_name %}
             <a href="/vote/{{article.key()}}"><i class="fa fa-thumbs-up"></i>  Like</a>
             <br>
             <!-- Button trigger modal -->
