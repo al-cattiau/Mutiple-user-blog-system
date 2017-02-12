@@ -8,5 +8,7 @@ Please signup before write an article or comment others article.
 
 Every one can vote once for each article.
 
+User can edit and delete their own comments and articles.
+
 If you can any advice, contact me by [email](kingliujiaxin@gmail.com).
 
