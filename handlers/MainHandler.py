@@ -5,6 +5,7 @@ from google.appengine.ext import db
 from models.user import User
 from models.article import Article
 from models.comment import Comment
+from functools import wraps
 
 template_dir = os.path.join(os.path.dirname('Mutiple-user-blog-system'), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
@@ -59,6 +60,17 @@ class MainHandler(webapp2.RequestHandler):
         if article.author.key() == user.key():
             return True
         return False
+
+    @classmethod
+    def _check_user_or_login(self, func):
+        @wraps(func)
+        def check(func):
+            user = self.check_user()
+            if not user:
+                return self.redirect('/view')
+            else:
+                func
+        return check
 
 
     def get_all_users(self):

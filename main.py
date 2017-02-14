@@ -21,7 +21,6 @@ from handlers.CommentDeleteHandler import CommentDeleteHandler
 from handlers.CommentEditHandler import CommentEditHandler
 from handlers.EditHanlder import EditHandler
 from handlers.LogoutHandler import LogoutHandler
-from handlers.MainHandler import MainHandler
 from handlers.SignupHanlder import SignupHandler
 from handlers.SingleDeleteHandler import SingleDeleteHandler
 from handlers.SubmitHandler import SubmitHandler

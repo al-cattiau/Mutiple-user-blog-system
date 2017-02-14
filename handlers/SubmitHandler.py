@@ -20,6 +20,7 @@ class SubmitHandler(MainHandler):
         """
         self.render('write.html')
 
+    @_check_user_or_login()
     def post(self):
         """
         get the user submit, fetch the article content and store in datastore.
