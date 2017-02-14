@@ -22,6 +22,9 @@ class SingleDeleteHandler(MainHandler):
         check if the user already login and if article_key valid,
         if both are true, delete the article.
         """
+        own = self.user_own_article(article_key)
+        if not own:
+            self.redirect('/view')
         user = self.check_user()
         if not user:
             return self.redirect('/view')

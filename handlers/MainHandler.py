@@ -48,6 +48,19 @@ class MainHandler(webapp2.RequestHandler):
             if user:
                 return user
 
+    def user_own_article(self, article_key):
+        """
+        check if the user own the article
+        """
+        user = self.check_user()
+        if not user:
+            return False
+        article = db.get(article_key)
+        if article.user.key() == user.key():
+            return True
+        return False
+
+
     def get_all_users(self):
         """
         get all user in the datastore
@@ -79,4 +92,3 @@ class MainHandler(webapp2.RequestHandler):
         """
         comments = db.GqlQuery("SELECT * FROM Comment")
         return comments
-

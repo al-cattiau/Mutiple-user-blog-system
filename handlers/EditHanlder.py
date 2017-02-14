@@ -23,11 +23,13 @@ class EditHandler(MainHandler):
         article.body = article.body.replace('<br>', '\n')
         self.render('rewrite.html', article=article)
 
-
     def post(self, article_key):
         """
         get the user submit, fetch the article content and update in datastore.
         """
+        own = self.user_own_article(article_key)
+        if not own:
+            self.redirect('/view')
         user = self.check_user()
         if not user:
             return self.redirect('/login')
