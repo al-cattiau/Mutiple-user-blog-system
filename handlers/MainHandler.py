@@ -56,7 +56,7 @@ class MainHandler(webapp2.RequestHandler):
         if not user:
             return False
         article = db.get(article_key)
-        if article.user.key() == user.key():
+        if article.author.key() == user.key():
             return True
         return False
 
