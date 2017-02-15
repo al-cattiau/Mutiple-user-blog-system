@@ -61,15 +61,15 @@ class MainHandler(webapp2.RequestHandler):
             return True
         return False
 
-    @classmethod
+
     def _check_user_or_login(self, func):
-        @wraps(func)
-        def check(func):
+        def check(*args, **kwargs):
             user = self.check_user()
             if not user:
                 return self.redirect('/view')
             else:
-                func
+                x = func(*args, **kwargs)
+                return x
         return check
 
 
