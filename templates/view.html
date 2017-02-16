@@ -36,12 +36,12 @@ experience others Life
                         <a href="/vote/{{article.key()}}"><i class="fa fa-thumbs-up"></i>  Like</a>
                         <br>
                         <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#modelId">
+                        <button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#modelId{{ article.title }}">
                         Comment
                         </button>
                         
                         <!-- Modal -->
-                        <div class="modal fade" id="modelId" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+                        <div class="modal fade" id="modelId{{ article.title }}" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">

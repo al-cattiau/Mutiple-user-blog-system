@@ -1,20 +1,15 @@
-import webapp2
-import jinja2
-import os
+from handlers.Decorator import _check_user_or_login
 from google.appengine.ext import db
 from models.user import User
 from models.article import Article
 from models.comment import Comment
 from MainHandler import MainHandler
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
-
-
 class CommentDeleteHandler(MainHandler):
     """
     handle comment delete request.
     """
+    @_check_user_or_login
     def get(self, comment_key):
         """
         check if the user already login and if comment_key valid,
@@ -25,5 +20,4 @@ class CommentDeleteHandler(MainHandler):
         if comment.user.key() == user.key() and user:
             db.delete(comment_key)
         return self.redirect('/')
-
 

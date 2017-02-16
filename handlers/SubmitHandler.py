@@ -1,14 +1,8 @@
-import webapp2
-import jinja2
-import os
 from google.appengine.ext import db
-from models.user import User
-from models.article import Article
-from models.comment import Comment
 from handlers.MainHandler import MainHandler
+from handlers.Decorator import _check_user_or_login
+from models.article import Article
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
 
 class SubmitHandler(MainHandler):
     """
@@ -20,17 +14,12 @@ class SubmitHandler(MainHandler):
         """
         self.render('write.html')
 
-    @_check_user_or_login()
+    @_check_user_or_login
     def post(self):
         """
         get the user submit, fetch the article content and store in datastore.
         """
-        user = self.check_user()
-        if not user:
-            return self.redirect('/view')
-        author = user.key()
-        if not author:
-            return self.redirect('/login')
+        author = self.check_user()
         title = self.request.get('title')
         body = self.request.get('body')
         body = body.replace('\n', '<br>')

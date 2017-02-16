@@ -7,6 +7,7 @@ from models.article import Article
 from models.comment import Comment
 from functools import wraps
 
+
 template_dir = os.path.join(os.path.dirname('Mutiple-user-blog-system'), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
 
@@ -31,7 +32,6 @@ class MainHandler(webapp2.RequestHandler):
         """
         self.write(self.render_str(template, **kw))
 
-    # Check the cookie
     def check_key(self):
         """
         check the user cookie for identify.
@@ -61,16 +61,17 @@ class MainHandler(webapp2.RequestHandler):
             return True
         return False
 
-
-    def _check_user_or_login(self, func):
-        def check(*args, **kwargs):
-            user = self.check_user()
-            if not user:
-                return self.redirect('/view')
-            else:
-                x = func(*args, **kwargs)
-                return x
-        return check
+    def user_own_comment(self, comment_key):
+        """
+        check if the user own the commet
+        """
+        user = self.check_user()
+        if not user:
+            return False
+        comment = db.get(comment_key)
+        if comment.user.key() == user.key():
+            return True
+        return False
 
 
     def get_all_users(self):
