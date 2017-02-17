@@ -23,7 +23,7 @@ class CommentEditHandler(MainHandler):
         if both are true, edit and update the comment.
         """
         user = self.check_user()
-        comment = db.get(comment_key)
+        comment = Comment.get_by_id(comment_key)
         content = self.request.get('comment')
         if user and content and comment.user.key() == user.key():
             comment.content = content

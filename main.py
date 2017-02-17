@@ -30,8 +30,7 @@ from handlers.CommentHandler import CommentHandler
 from handlers.LoginHanlder import LoginHandler
 
 
-app = webapp2.WSGIApplication([
-    ('/comment/delete/(.*)/', CommentDeleteHandler),
+app = webapp2.WSGIApplication([    
     ('/submit', SubmitHandler),
     ('/view', ViewHandler),
     ('/', ViewHandler),
@@ -42,5 +41,6 @@ app = webapp2.WSGIApplication([
     ('/edit/(.*)', EditHandler),
     ('/vote/(.*)', VoteHandler),
     ('/comments/(.*)/', CommentHandler),
-    ('/comment/edit/(.*)/', CommentEditHandler),
+    ('/comment/edit/(.*)', CommentEditHandler),
+    ('/comment/delete/(.*)', CommentDeleteHandler),
 ], debug=True)

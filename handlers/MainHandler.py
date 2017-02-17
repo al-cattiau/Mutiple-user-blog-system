@@ -68,7 +68,7 @@ class MainHandler(webapp2.RequestHandler):
         user = self.check_user()
         if not user:
             return False
-        comment = db.get(comment_key)
+        comment = Comment.get_by_id(comment_key)
         if comment.user.key() == user.key():
             return True
         return False
